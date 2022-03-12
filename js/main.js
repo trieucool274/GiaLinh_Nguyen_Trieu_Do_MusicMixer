@@ -1,36 +1,112 @@
 (() => {
 
-  const keyGraphics = document.querySelectorAll('.key');
+	const instruments = document.querySelectorAll(".instrument-icon"),
+    dropZones = document.querySelectorAll(".dropzone"),
+    playbtn = document.querySelector("#play-btn"),
+    controller = document.querySelector('.controller'),
+    questionBtn = document.querySelector(".question-button"),
+	closeBtn = document.querySelector(".close-btn"),
+	explainerBox = document.querySelector(".explainer-box"),
+	resetBtn = document.querySelector('.reset-button'),
+	instrumentsContainer = document.querySelector(".instruments"),
+	main = document.querySelector(".main");
+    let audioToPlay = [];
+    let isPlaying = false;
 
+	instruments.forEach(instrument => {
+		instrument.addEventListener('dragstart', function(e){
+			e.dataTransfer.setData("text/plain", this.dataset.ref);
+		});
+	})
 
-  //keyGraphics.forEach(key => key.addEventListener("keyup", catchKeyCode));
+    dropZones.forEach(zone => {
+		zone.addEventListener("dragover", function(e) {
+			e.preventDefault();
+		});
+		zone.addEventListener("drop", function(e) {
+			// Prevents adding multiple instruments to same dropzone
+			e.preventDefault();
+			console.log("Dropped something on me!");
 
-  function catchKeyCode(event) {
-    //let key = event.keyCode
-    //debugger;
-    let audio = document.querySelector(`audio[data-key="${event.keyCode}"]`),
-      currentKey = document.querySelector(`div[data-key="${event.keyCode}"]`);
+			let instrument = e.dataTransfer.getData("text/plain");
+			console.log(instrument);
 
-    if (!audio) { return; }
+			if (zone.children.length === 0){
+				e.target.appendChild(document.querySelector(`img[data-ref="${instrument}"]`));
+			} else {
+			  console.log("Zone already has an element");
+			}
+			audioToPlay.push(document.querySelector(`audio[data-ref="${instrument}"]`));
 
-    currentKey.classList.add("playing");
+			if ((dropZones[0].firstElementChild.dataset.back === 'mariachii') && (dropZones[1].firstElementChild.dataset.back === 'mariachii') && (dropZones[2].firstElementChild.dataset.back === 'mariachii')){
+				main.style.backgroundImage = 'url(images/mariachii.png)';
+			}
 
-    audio.currentTime = 0;
+			if ((dropZones[0].firstElementChild.dataset.back === 'nirvana') && (dropZones[1].firstElementChild.dataset.back === 'nirvana') && (dropZones[2].firstElementChild.dataset.back === 'nirvana')){
+				main.style.backgroundImage = 'url(images/nirvana.jpg)';
+			}
 
-    audio.play();
-  }
+			if ((dropZones[0].firstElementChild.dataset.back === 'frank-sinatra') && (dropZones[1].firstElementChild.dataset.back === 'frank-sinatra') && (dropZones[2].firstElementChild.dataset.back === 'frank-sinatra')){
+				main.style.backgroundImage = 'url(images/frank-sinatra.jpg)';
+			}
+		});
 
-  //remove playing class after the transition fire at the first time
+	});
+    
+	function playController(){
+		if(!isPlaying){
+			audioToPlay.forEach(audio => {
+				audio.play();
+			});
+		  	isPlaying = true;
+		  	controller.classList.add('controller-active');
+		  	dropZones.forEach(dropzone => dropzone.classList.add("dropzone-active"));
+		  	playbtn.style.backgroundImage = "url(images/stop-btn.svg)";
+		} else {
+			isPlaying = false;
+		  	audioToPlay.forEach(audio => {
+				audio.pause();
+				audio.currentTime = 0;
+		  	});
+		  	controller.classList.remove('controller-active');
+		  	dropZones.forEach(dropzone => dropzone.classList.remove("dropzone-active"));
+		  	// 2. Change image to 'play'
+		  	playbtn.style.backgroundImage = "url(images/play-btn.svg)";
+		}
+	}
 
-  function resetKey(event) {
-    //debugger;
+	resetBtn.addEventListener('click', function(){
+		console.log("Reset was pressed");
+		dropZones.forEach(zone => {
+			if(zone.childNodes.length > 0){
+				instrumentsContainer.appendChild(zone.firstElementChild);
+				isPlaying = false;
+		  		audioToPlay.forEach(audio => {
+					audio.pause();
+					audio.currentTime = 0;
+				});
+				audioToPlay = [];
+				controller.classList.remove('controller-active');
+				dropZones.forEach(dropzone => dropzone.classList.remove("dropzone-active"));
+		  		// 2. Change image to 'play'
+				playbtn.style.backgroundImage = "url(images/play-btn.svg)";
+				main.style.backgroundImage = 'url(images/background.jpg)';
+			} else {
+				console.log("Node is empty");
+			}
+		})
+	});
 
-    if (event.propertyName === "transform") {
-      this.classList.remove("playing");
-    }
-  }
+	questionBtn.addEventListener('click', function(){
+		explainerBox.classList.add("explainer-box-active");
+		questionBtn.style.display = 'none';
+	});
 
-  keyGraphics.forEach(key => key.addEventListener("transitioned", resetKey));
+	closeBtn.addEventListener('click', function(){
+		explainerBox.classList.remove("explainer-box-active");
+		questionBtn.style.display = 'block';
+	});
 
-  window.addEventListener("keyup", catchKeyCode);
+	playbtn.addEventListener('click', playController);
+
 })();
